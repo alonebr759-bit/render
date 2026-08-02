@@ -14,7 +14,7 @@ from pymongo import MongoClient
 
 # ═══════════════════════════════════════════════════════════════════
 # ENV LOADER — supports .env file (no external dep)
-# Load order: ENV_FILE env var > DDOS X LODER.env > .env
+# Load order: ENV_FILE env var > DESTROY LOADER.env > .env
 # Existing os.environ values are NOT overridden (real env wins).
 # ═══════════════════════════════════════════════════════════════════
 def _load_env_file(path):
@@ -39,7 +39,7 @@ def _load_env_file(path):
         print(f"[! ENV] Failed to load {path}: {e}")
         return False
 
-_env_candidates = [os.environ.get('ENV_FILE'), 'DDOS X LODER.env', '.env']
+_env_candidates = [os.environ.get('ENV_FILE'), 'DESTROY LOADER.env', '.env']
 for _p in _env_candidates:
     if _load_env_file(_p):
         break
@@ -48,7 +48,7 @@ app = Flask(__name__)
 
 # ═══════════════════════════════════════════════════════════════════
 # CONFIG — values from .env, fallback to empty string
-# Set them in DDOS X LODER.env (local) OR Render/Railway env vars (production)
+# Set them in DESTROY LOADER.env (local) OR Render/Railway env vars (production)
 # ═══════════════════════════════════════════════════════════════════
 app.secret_key = os.getenv('FLASK_SECRET_KEY', '') or secrets.token_hex(16)
 
@@ -182,7 +182,7 @@ def health_check():
     return jsonify({
         'status': 'alive',
         'timestamp': datetime.utcnow().isoformat() + 'Z',
-        'service': 'DDOS X LODER Panel',
+        'service': 'DESTROY LOADER Panel',
         'version': '4.0'
     })
 
@@ -381,7 +381,7 @@ LOGIN_TEMPLATE = '''<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DDOS X LODER Panel – Login</title>
+<title>DESTROY LOADER Panel – Login</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Plus Jakarta Sans',sans-serif}
@@ -445,7 +445,7 @@ cursor:pointer;transition:.25s;margin-top:8px;box-shadow:0 8px 24px rgba(139,92,
 <path d="M9 12l2 2 4-4" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
 </div>
-<h1>DDOS X LODER</h1>
+<h1>DESTROY LOADER</h1>
 <div class="tagline">Premium Key Management & Reseller Panel</div>
 <div class="feats">
 <div class="feat"><div class="dot"></div>Secure Key Generation</div>
@@ -462,7 +462,7 @@ cursor:pointer;transition:.25s;margin-top:8px;box-shadow:0 8px 24px rgba(139,92,
 <div class="ig"><label>Password</label><input name="password" type="password" placeholder="••••••••••" required></div>
 <button type="submit" class="btn-submit">Sign In</button>
 </form>
-<div class="ft">© 2025 <span>DDOS X LODER</span> Premium Panel</div>
+<div class="ft">© 2025 <span>DESTROY LOADER</span> Premium Panel</div>
 </div>
 </div>
 <script>
@@ -659,7 +659,7 @@ tr:hover td{background:var(--row-hover)}
 <div class="topbar">
 <div class="brand-wrap">
 <div class="brand-icon">T</div>
-<div class="brand">DDOS X LODER</div>
+<div class="brand">DESTROY LOADER</div>
 </div>
 <div class="user-info">
 <span>{{ display_name }}</span>
@@ -767,6 +767,13 @@ container.innerHTML=`
 <div class="stat-card sc-orange"><div class="icon">${ICONS.users}</div><div class="label">Resellers</div><div class="value">${resellers.length}</div></div>
 <div class="stat-card sc-purple"><div class="icon">${ICONS.device}</div><div class="label">Total Devices</div><div class="value">${totalDevices}</div></div>
 <div class="stat-card sc-pink"><div class="icon">${ICONS.spark}</div><div class="label">Live Now</div><div class="value">${liveDevices}<span style="font-size:13px;font-weight:500;opacity:.85;margin-left:5px">🟢</span></div></div>
+</div>
+
+<div id="slotWidget" style="background:var(--surface);backdrop-filter:blur(16px);border:1px solid var(--border);border-radius:16px;padding:16px 22px;margin-bottom:16px;box-shadow:var(--shadow);display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+<div style="font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px">⚡ ATTACK SLOTS</div>
+<div id="slotDots" style="display:flex;gap:8px;align-items:center"></div>
+<div id="slotCount" style="font-family:monospace;font-size:14px;font-weight:700;color:var(--text);margin-left:auto">0/8 FREE</div>
+<div id="slotStatus" style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;background:rgba(16,185,129,.15);color:#10b981">ALL FREE</div>
 </div>
 
 <div class="section">
@@ -1251,6 +1258,37 @@ setInterval(()=>{
 
 function render(){if(ROLE==='owner')renderOwnerDashboard();else renderResellerDashboard();}
 render();
+
+// Real-time slot polling — updates every 5 seconds
+async function pollSlots(){
+  try{
+    const data=await api('/api/slots');
+    const busy=data.busy||0;
+    const total=data.total||8;
+    const dotsEl=document.getElementById('slotDots');
+    const countEl=document.getElementById('slotCount');
+    const statusEl=document.getElementById('slotStatus');
+    if(!dotsEl||!countEl||!statusEl)return;
+    let dotsHtml='';
+    for(let i=0;i<total;i++){
+      dotsHtml+=i<busy?'<div style="width:14px;height:14px;border-radius:50%;background:#ef4444;box-shadow:0 0 8px rgba(239,68,68,.6);animation:pulse 1.5s infinite"></div>':'<div style="width:14px;height:14px;border-radius:50%;background:#10b981;box-shadow:0 0 8px rgba(16,185,129,.6)"></div>';
+    }
+    dotsEl.innerHTML=dotsHtml;
+    countEl.textContent=busy>0?busy+'/'+total+' BUSY':'0/'+total+' FREE';
+    if(busy>0){
+      statusEl.textContent=busy+' RUNNING';
+      statusEl.style.background='rgba(239,68,68,.15)';
+      statusEl.style.color='#ef4444';
+    }else{
+      statusEl.textContent='ALL FREE';
+      statusEl.style.background='rgba(16,185,129,.15)';
+      statusEl.style.color='#10b981';
+    }
+  }catch(e){}
+}
+pollSlots();
+setInterval(pollSlots,5000);
+
 setInterval(()=>{
   if(!modalBg.classList.contains('active')&&!document.querySelector('[id^="dev_"]')){
     render();
@@ -1329,7 +1367,7 @@ def dashboard():
         r = find_reseller(session['username'])
         credits = r['credits'] if r else 0
     return render_template_string(DASHBOARD_TEMPLATE,
-        title='DDOS X LODER Panel',
+        title='DESTROY LOADER Panel',
         role=session['role'],
         username=session['username'],
         display_name=session['display_name'],
@@ -2010,6 +2048,17 @@ def _handle_attack_from_session(data, found_key):
     if not time_val:
         time_val = '60'
 
+    # Check slot limit — max 8 concurrent attacks allowed
+    if attack_logs_col is not None:
+        try:
+            now_iso = datetime.utcnow().isoformat() + 'Z'
+            attack_logs_col.delete_many({'ends_at': {'$lt': now_iso}})
+            running_count = attack_logs_col.count_documents({})
+            if running_count >= 8:
+                return make_encoded_response({'valid': True, 'attack': False, 'message': 'ALL SLOTS BUSY, PLEASE WAIT'})
+        except Exception:
+            pass
+
     # Load enabled attack APIs sorted by priority
     apis = load_enabled_attack_apis()
     if not apis:
@@ -2197,6 +2246,49 @@ def api_attack_logs():
     return jsonify(logs)
 
 
+@app.route('/api/slots', methods=['GET'])
+@login_required
+def api_slots():
+    """Get real-time slot status for web dashboard. Returns {busy, total, free}."""
+    busy = 0
+    total_slots = 8
+    if attack_logs_col is not None:
+        now_iso = datetime.utcnow().isoformat() + 'Z'
+        try:
+            attack_logs_col.delete_many({'ends_at': {'$lt': now_iso}})
+        except Exception:
+            pass
+        try:
+            busy = attack_logs_col.count_documents({})
+        except Exception:
+            busy = 0
+    busy = min(busy, total_slots)
+    return jsonify({'busy': busy, 'total': total_slots, 'free': total_slots - busy})
+
+
+@app.route('/connect/slots', methods=['POST'])
+def connect_slots():
+    """
+    Returns the number of currently running attacks (busy slots) across all users.
+    App polls this every 5 seconds for real-time slot display.
+    """
+    data = get_decoded_request()
+    busy = 0
+    total_slots = 8
+    if attack_logs_col is not None:
+        now_iso = datetime.utcnow().isoformat() + 'Z'
+        try:
+            attack_logs_col.delete_many({'ends_at': {'$lt': now_iso}})
+        except Exception:
+            pass
+        try:
+            busy = attack_logs_col.count_documents({})
+        except Exception:
+            busy = 0
+    busy = min(busy, total_slots)
+    return make_encoded_response({'busy': busy, 'total': total_slots, 'free': total_slots - busy})
+
+
 
 
 
@@ -2210,7 +2302,7 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 3000))
     debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
 
-    print(f"[✓] Starting DDOS X LODER Panel v4.0 on port {port}")
+    print(f"[✓] Starting DESTROY LOADER Panel v4.0 on port {port}")
     print(f"[✓] Debug mode: {debug_mode}")
     print(f"[✓] Health check available at: http://localhost:{port}/health")
     print(f"[✓] Keep-alive active - will ping every 4 minutes")
